@@ -108,14 +108,18 @@ void salvarSolucaoArquivosPO(No* solucao){
     ///Faz a lista de clusters ficar circular
     clusterFinal->proximo=clusterInicial;
     clusterInicial->anterior=clusterFinal;
-
-    while(c!=clusterInicial){
+    fprintf(arqYr,"%d\n",getNumTotalClusters());///numero de arestas inter cluster
+    while(c!=clusterInicial){///salva as areatas inter cluster
         Vertice *vEntrada =  c->inicio->vertice;
         Vertice *vSaida = c->anterior->fim->vertice;
         fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida));
         c=c->proximo;
     }
-     fprintf(arqYr,"#\n");
+    ///salva a ultima aresta inter cluster ligando o final ao inicial
+    Vertice *vEntrada =  c->inicio->vertice;
+    Vertice *vSaida = c->anterior->fim->vertice;
+    fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida));
+
 
     c = clusterInicial; ///desaloca a lista encadeada de clusters
     while(c!=clusterFinal){

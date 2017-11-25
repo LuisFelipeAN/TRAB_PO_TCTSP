@@ -287,7 +287,9 @@ void salvarSolucao(No* solucao){
         fprintf(arqSaida,"#Todos os Tabus foram visitados\n");
     }
 }
-
+int getNumTotalClusters(){
+    return numTotalClusters;
+}
 ///desaloca uma solucao com o ponteiro inicial dado pelo parametro solucao
 void desalocaSolucao(No* solucao){
    No* aux;

@@ -29,7 +29,7 @@ void imprimeVerificacaoViabilidade(No* solucao);
 
 ClusterInstancia* getCluster(int id);
 
-
+int getNumTotalClusters();
 int calculaCustoSolucao(No* solucao);
 
 void desalocaMemoria(No* solucao);
