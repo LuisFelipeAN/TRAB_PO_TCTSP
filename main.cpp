@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Programa.h"
 #include "BuscaLocal.h"
+#include "PesquisaOperacional.h"
 using namespace std;
 
 ///estrutura para encadear as solucoes geradas
@@ -51,6 +52,8 @@ int main(int argc, char** args)
     ultimaSolucao->proxima = NULL;
     ultimaSolucao->solucao = NULL;
 
+    inicializaArquivosEscrita("clusters.txt","yr.txt");
+
     int minimo=99999999;
     No* melhorSolucao;
     for(int i=0;i<1500;i++){
@@ -59,6 +62,7 @@ int main(int argc, char** args)
             solucao = construtivo();///obtem uma solucao inicial
         }
         ///efetua uma busca VND na solucao atual
+        salvarSolucaoArquivosPO(solucao);
         int custoAtual = calculaCustoSolucao(solucao);
         int controle=0;
            while(controle<4){
@@ -78,6 +82,7 @@ int main(int argc, char** args)
                 if (custo< custoAtual){
                     custoAtual=custo;
                     controle=0;
+                    salvarSolucaoArquivosPO(solucao);
                 }else{
                    controle++;
                 }
@@ -97,6 +102,7 @@ int main(int argc, char** args)
             melhorSolucao=solucao;
         }
     }
+    finalizarArquivosEscrita();
     salvarSolucao(melhorSolucao);///salva a melhor de todas as solucoes
 
     ///desaloca a lista de solucoes

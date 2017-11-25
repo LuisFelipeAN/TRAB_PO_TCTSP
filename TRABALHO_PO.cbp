@@ -37,6 +37,8 @@
 		<Unit filename="BuscaLocal.h" />
 		<Unit filename="ClusterInstancia.cpp" />
 		<Unit filename="ClusterInstancia.h" />
+		<Unit filename="PesquisaOperacional.cpp" />
+		<Unit filename="PesquisaOperacional.h" />
 		<Unit filename="Programa.cpp" />
 		<Unit filename="Programa.h" />
 		<Unit filename="Tabu.cpp" />
