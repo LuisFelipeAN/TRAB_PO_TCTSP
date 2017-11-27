@@ -56,7 +56,7 @@ int main(int argc, char** args)
 
     int minimo=99999999;
     No* melhorSolucao;
-    for(int i=0;i<1;i++){///numero de interacoes
+    for(int i=0;i<2;i++){///numero de interacoes
         No* solucao = NULL;
         while(solucao==NULL){
             solucao = construtivo();///obtem uma solucao inicial
@@ -83,7 +83,6 @@ int main(int argc, char** args)
                 if (custo< custoAtual){
                     custoAtual=custo;
                     controle=0;
-
                 }else{
                    controle++;
                 }
@@ -106,6 +105,7 @@ int main(int argc, char** args)
     finalizarArquivosEscrita();
     salvarSolucao(melhorSolucao);///salva a melhor de todas as solucoes
     inicializaLeitura("clusters.txt","yr.txt");
+    emitirSistemaLinear("sistema.txt");
     ///desaloca a lista de solucoes
     NoSolucao* aux;
     if(ultimaSolucao!=NULL){
