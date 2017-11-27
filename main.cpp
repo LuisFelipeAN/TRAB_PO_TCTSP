@@ -66,6 +66,7 @@ int main(int argc, char** args)
         int custoAtual = calculaCustoSolucao(solucao);
         int controle=0;
            while(controle<4){
+                 salvarSolucaoArquivosPO(solucao);
                 if(controle==0) {
                     buscaLocal(solucao);
                 }
@@ -82,7 +83,7 @@ int main(int argc, char** args)
                 if (custo< custoAtual){
                     custoAtual=custo;
                     controle=0;
-                    salvarSolucaoArquivosPO(solucao);
+
                 }else{
                    controle++;
                 }
@@ -104,7 +105,7 @@ int main(int argc, char** args)
     }
     finalizarArquivosEscrita();
     salvarSolucao(melhorSolucao);///salva a melhor de todas as solucoes
-
+    inicializaLeitura("clusters.txt","yr.txt");
     ///desaloca a lista de solucoes
     NoSolucao* aux;
     if(ultimaSolucao!=NULL){
@@ -123,6 +124,7 @@ int main(int argc, char** args)
 
     ///fecha o arquivo de saida
     fclose(arquivoSaida);
+
     return 0;
 }
 
