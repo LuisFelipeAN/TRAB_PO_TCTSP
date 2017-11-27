@@ -127,4 +127,13 @@ int main(int argc, char** args)
 
     return 0;
 }
-
+/*
+int main(int argc, char *argv[]) {
+    if (argc > 1) { // usage: cmd datafile
+        read_tableau(&tab, argv[1]);
+    }
+    print_tableau(&tab,"Initial");
+    simplex(&tab);
+    return 0;
+}
+*/
