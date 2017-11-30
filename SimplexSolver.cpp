@@ -19,7 +19,7 @@
 
 #include "Eigen/Dense"
 #include "SimplexSolver.h"
-//#include "exception.h"
+#include "exception.h"
 
 using namespace Eigen;
 
@@ -70,8 +70,7 @@ SimplexSolver::SimplexSolver(int mode, const VectorXd &objectiveFunction, const 
 			throw(new FException("SimplexSolver: All righthand-side coefficients of the constraint matrix must be non-negative."));
 		}
 	}
-	*/
-
+    */
 	/*
 		Build tableau
 	*/

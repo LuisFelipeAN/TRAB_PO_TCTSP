@@ -187,10 +187,10 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     fprintf(arq,"0.000 ");
     Yr * pr = primeiroYr;
     while(pr!=NULL){
-        matriz[i][j] = p->custo;
+        matriz[i][j] = pr->primeira->custo;
         j++;
-        fprintf(arq,"%lf ",p->custo);
-        pr=pr-> proximo;
+        fprintf(arq,"%lf ",pr->primeira->custo);
+        pr= pr->proximo;
     }
 
     int cAtual=1;
@@ -217,9 +217,6 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     int numClusters = getNumTotalClusters();
     ///Primeira restriçao
     while(cAtual<=numClusters){
-        matriz[i][j] = 1;
-        j++;
-        fprintf(arq,"1\t");
         pr = primeiroYr;
         while(pr!=NULL){
             matriz[i][j] = 0;
@@ -240,6 +237,9 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             }
             p=p->proximo;
         }
+        matriz[i][j] = 1;
+        j++;
+        fprintf(arq,"1\t");
         j=0;
         i++;
         fprintf(arq,"\n");
@@ -248,10 +248,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
 
     /// Segunda Restricao
     fprintf(arq,"\n");
-    matriz[i][j] = 1;
-    j++;
     pr = primeiroYr;
-    fprintf(arq,"1\t");
     while(pr!=NULL){
         matriz[i][j] = 1;
         j++;
@@ -265,6 +262,9 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         fprintf(arq,"0 ");
         p=p->proximo;
     }
+    matriz[i][j] = 1;
+    j++;
+    fprintf(arq,"1\t");
     j=0;
     i++;
 
@@ -272,9 +272,6 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     fprintf(arq,"\n\n");
     x = primeiroX;
     while(x){
-        matriz[i][j] = 0;
-        j++;
-        fprintf(arq, "0\t");
         Yr* y = primeiroYr;
         while(y){
             if(buscaEntrada(x, y)){
@@ -303,6 +300,9 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             }
             xAux = xAux->proximo;
         }
+        matriz[i][j] = 0;
+        j++;
+        fprintf(arq, "0\t");
         fprintf(arq,"\n");
         j=0;
         i++;
@@ -311,9 +311,6 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     fprintf(arq,"\n\n");
     x = primeiroX;
     while(x){
-        matriz[i][j] = 0;
-        j++;
-        fprintf(arq, "0\t");
         Yr* y = primeiroYr;
         while(y){
             if(buscaSaida(x, y)){
@@ -342,6 +339,9 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             }
             xAux = xAux->proximo;
         }
+        matriz[i][j] = 0;
+        j++;
+        fprintf(arq, "0\t");
         j=0;
         i++;
         fprintf(arq,"\n");
@@ -356,24 +356,23 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         }
     }
 
-    std::cout << funcaoObjetivo << std::endl;
-    SimplexSolver *simplex = new SimplexSolver(SIMPLEX_MAXIMIZE, funcaoObjetivo, restricoes);
-
-    std::cout << simplex->hasSolution() << std::endl << simplex->getSolution() << std::endl;
-
-
-    /*FILE* arqMat= fopen("dual.txt", "w");
+    FILE* arqMat= fopen("dual.txt", "w");
 
     fprintf(arqMat, "%d %d\n", num_variaveis, num_restricoes);
 
-    for(int j=0; j<num_variaveis; j++){
-        for(int i=0; i<num_restricoes; i++){
+    for(int i=0; i<num_restricoes; i++){
+        for(int j=0; j<num_variaveis; j++){
             fprintf(arqMat, "%.0lf ", matriz[i][j]);
         }
         fprintf(arqMat, "\n");
     }
 
-    read_tableau(NULL,"dual.txt");*/
+    //std::cout << funcaoObjetivo << std::endl;
+    SimplexSolver *simplex = new SimplexSolver(SIMPLEX_MINIMIZE, funcaoObjetivo, restricoes);
+
+    std::cout << simplex->getSolution().transpose() << std::endl;
+
+
 
 /*
 
