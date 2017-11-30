@@ -159,7 +159,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         x=x->proximo;
 
     }
-    fprintf(arq,"\n\n\n");
+    fprintf(arq,"\n\n");
 
 
     int numClusters = getNumTotalClusters();
@@ -174,19 +174,20 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         p = primeiroX;
         while(p!=NULL){
             if(p->idCluster==cAtual){
-                fprintf(arq," -1 ");
+                fprintf(arq," 1 ");
             }else{
                 fprintf(arq," 0 ");
             }
             p=p->proximo;
         }
-        fprintf(arq,"\n\n");
+        fprintf(arq,"\n");
         cAtual++;
     }
+    fprintf(arq,"\n");
     pr = primeiroYr;
-    fprintf(arq," 1 ");
+    fprintf(arq,"1 ");
     while(pr!=NULL){
-      fprintf(arq," -1 ");
+      fprintf(arq," 1 ");
       pr=pr-> proximo;
     }
     p = primeiroX;
@@ -195,7 +196,17 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         p=p->proximo;
     }
 
+    fprintf(arq,"\n")
+    x = primeiroX;
+    while(x!=NULL){
+        fprintf(arq," %lf ",x->custo);
+        x=x->proximo;
+
+    }
     fclose(arq);
+}
+static X* busca(X* x){
+
 }
 static double calculaCustoIntraCluster(Cluster *c){
     No* no = c->inicio;
