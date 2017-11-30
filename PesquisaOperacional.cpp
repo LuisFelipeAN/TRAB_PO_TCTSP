@@ -1,4 +1,7 @@
 #include "PesquisaOperacional.h"
+#include "SimplexSolver.h"
+#include "Eigen/Dense"
+#include <iostream>
 
 ///estrutura para encadear os clusters presentes na solucao
 typedef struct Cluster{ ///estrutura para fragmentar a solucao em clusters com vertices de entrada e saida do cluster
@@ -203,6 +206,13 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     i++;
     fprintf(arq,"\n\n");
 
+    VectorXd funcaoObjetivo(num_variaveis);
+    for(int i=0; i<num_variaveis; i++){
+        funcaoObjetivo(i) = matriz[0][i];
+    }
+
+    //std::cout << funcaoObjetivo << std::endl;
+
 
     int numClusters = getNumTotalClusters();
     ///Primeira restriçao
@@ -238,8 +248,6 @@ void emitirSistemaLinear(char* nomeArquivoSl){
 
     /// Segunda Restricao
     fprintf(arq,"\n");
-    j=0;
-    i++;
     matriz[i][j] = 1;
     j++;
     pr = primeiroYr;
@@ -339,6 +347,21 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         fprintf(arq,"\n");
         x = x->proximo;
     }
+
+
+    MatrixXd restricoes(num_restricoes-1, num_variaveis);
+    for(int i=1; i<num_restricoes; i++){
+        for(int j=0; j<num_variaveis; j++){
+            restricoes(i-1, j) = matriz[i][j];
+        }
+    }
+
+    std::cout << funcaoObjetivo << std::endl;
+    SimplexSolver *simplex = new SimplexSolver(SIMPLEX_MAXIMIZE, funcaoObjetivo, restricoes);
+
+    std::cout << simplex->hasSolution() << std::endl << simplex->getSolution() << std::endl;
+
+
     /*FILE* arqMat= fopen("dual.txt", "w");
 
     fprintf(arqMat, "%d %d\n", num_variaveis, num_restricoes);

@@ -2,7 +2,7 @@
     Simple Simplex Solver Class
     Copyright (C) 2012  Tamas Bolner
 	For more information, visit: http://blog.bolner.hu/2012/08/22/simplex/
-	
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -17,15 +17,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Eigen/Dense>
+#include "Eigen/Dense"
 #include "SimplexSolver.h"
-#include "exception.h"
+//#include "exception.h"
 
 using namespace Eigen;
 
 /**
  * Constructor
- * 
+ *
  * @param int mode This can be one of these: SIMPLEX_MINIMIZE, SIMPLEX_MAXIMIZE
  * @param const VectorXd &objectiveFunction The coefficients of the objective function.
  * @param const MatrixXd &constraints Full matrix for the constraints. Contains also the righthand-side values.
@@ -36,10 +36,11 @@ SimplexSolver::SimplexSolver(int mode, const VectorXd &objectiveFunction, const 
 	this->foundSolution = false;
 	this->optimum = 0;
 	this->numberOfVariables = objectiveFunction.rows();
-	
+
 	/*
 		Validate input parameters
 	*/
+	/*
 	if (mode != SIMPLEX_MINIMIZE && mode != SIMPLEX_MAXIMIZE) {
 		throw(new FException("SimplexSolver: invalid value for the 'mode' parameter."));
 	}
@@ -51,12 +52,12 @@ SimplexSolver::SimplexSolver(int mode, const VectorXd &objectiveFunction, const 
 	if (constraints.rows() < 1) {
 		throw(new FException("SimplexSolver: The constraint matrix must contain at least one row."));
 	}
-	
+
 	if (constraints.cols() != objectiveFunction.rows() + 1) {
 		throw(new FException("SimplexSolver: The constraint matrix has %d columns, but should have %d, because the coefficient vector of the objective function has %d rows.",
 			constraints.cols(), objectiveFunction.rows() + 1, objectiveFunction.rows()));
 	}
-	
+
 	for (int i = 0; i < this->numberOfVariables; i++) {
 		if (objectiveFunction(i) == 0) {
 			throw(new FException("SimplexSolver: One of the coefficients of the objective function is zero."));
@@ -69,7 +70,8 @@ SimplexSolver::SimplexSolver(int mode, const VectorXd &objectiveFunction, const 
 			throw(new FException("SimplexSolver: All righthand-side coefficients of the constraint matrix must be non-negative."));
 		}
 	}
-	
+	*/
+
 	/*
 		Build tableau
 	*/
@@ -86,7 +88,7 @@ SimplexSolver::SimplexSolver(int mode, const VectorXd &objectiveFunction, const 
 		this->tableau <<	-constraints.rightCols(1).transpose(),						MatrixXd::Zero(1, this->numberOfVariables + 1),
 							constraints.leftCols(this->numberOfVariables).transpose(),	MatrixXd::Identity(this->numberOfVariables, this->numberOfVariables), objectiveFunction;
 	}
-	
+
 	/*
 		Simplex algorithm
 	*/
@@ -101,7 +103,7 @@ SimplexSolver::SimplexSolver(int mode, const VectorXd &objectiveFunction, const 
 			return;	// No solution
 		}
 	}
-	
+
 	/*
 		Fetch solution
 	*/
@@ -112,7 +114,7 @@ SimplexSolver::SimplexSolver(int mode, const VectorXd &objectiveFunction, const 
 		// Maximize
 		for (int i = 0; i < this->numberOfVariables; i++) {
 			temp = this->getPivotRow(i);
-			
+
 			if (temp > 0) {
 				// Basic variable
 				this->solution(i) = this->tableau(temp, constantColumn);
@@ -146,7 +148,7 @@ bool SimplexSolver::hasSolution() {
 /**
  * Returns the maximum/minimum value of
  * the objective function.
- * 
+ *
  * @returns double
  */
 double SimplexSolver::getOptimum() {
@@ -168,7 +170,7 @@ VectorXd SimplexSolver::getSolution() {
  * Tries to find smallest non-negative ratio.
  * Returns -1 if all possible pivots are 0 or if the ratios are negative.
  * Deals with cases like this:  0/negative < 0/positive
- * 
+ *
  * @param __int64 column
  * @returns __int64 Returns the number of the pivot row, or -1 if found none.
  */
@@ -179,7 +181,7 @@ __int64 SimplexSolver::findPivot_min(__int64 column) {
 	double minConstant = 0;	// For the "0/negative < 0/positive" difference the constants have to be tracked also.
 	double ratio;
 	__int64 rowNum = this->tableau.rows();
-	
+
 	for (int i = 1; i < rowNum; i++) {
 		if (this->tableau(i, column) == 0) {
 			continue;
@@ -217,14 +219,14 @@ __int64 SimplexSolver::findPivot_min(__int64 column) {
 
 /**
  * Iterates through the this->tableau matrix to solve the problem.
- * 
+ *
  * @param __int64 variableNum The number of variables (dimensions). (different for the minimization problem)
  * @returns bool Returns true if a solution has been found. Returns false otherwise.
  */
 bool SimplexSolver::simplexAlgorithm(__int64 variableNum) {
 	MatrixXd::Index pivotColumn;
 	__int64 pivotRow;
-	
+
 	while (true) {
 		/*
 			Find pivot column, check for halt condition
@@ -234,7 +236,7 @@ bool SimplexSolver::simplexAlgorithm(__int64 variableNum) {
 			//Found no negative coefficient
 			break;
 		}
-		
+
 		/*
 			Find pivot row
 		*/
@@ -243,7 +245,7 @@ bool SimplexSolver::simplexAlgorithm(__int64 variableNum) {
 			//no solution
 			return false;
 		}
-		
+
 		/*
 			Do pivot operation
 		*/
@@ -251,7 +253,7 @@ bool SimplexSolver::simplexAlgorithm(__int64 variableNum) {
 		this->tableau(pivotRow, pivotColumn) = 1;	// For possible precision issues
 		for (int i = 0; i < this->tableau.rows(); i++) {
 			if (i == pivotRow) continue;
-			
+
 			this->tableau.row(i) -= this->tableau.row(pivotRow) * this->tableau(i, pivotColumn);
 			this->tableau(i, pivotColumn) = 0;	// For possible precision issues
 		}
@@ -266,7 +268,7 @@ bool SimplexSolver::simplexAlgorithm(__int64 variableNum) {
  * Otherwise return -1.
  * This method is used in the final step of maximization, when we read
  * the solution from the tableau.
- * 
+ *
  * @param __int64 column
  * @returns __int64
  */

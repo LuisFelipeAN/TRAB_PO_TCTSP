@@ -26,7 +26,6 @@ void Tabu::insereVertice(Vertice* v){
 ///retorna o primeiro vertice diferente do vertice passado
 Vertice* Tabu::outroVertice(Vertice *v){
     Vertice* retorno=primeiroNo->vertice;
-    NoTabu* aux;
     NoTabu* percorre;
      NumTrocasVertices++;
     if(primeiroNo->vertice==v&&primeiroNo->proximo!=NULL){///retorna o segundo vertice da lista encadeada
@@ -94,9 +93,6 @@ Vertice * Tabu::getRamdomCluster(int IdCluster){
         vRand = rand() % cont;
     else
         vRand=0;
-    if(IdCluster == 2){
-        int vsav;
-    }
     cont=0;
     for(NoTabu *aux = primeiroNo;aux!=NULL;aux=aux->proximo){
            if(aux->vertice->getIndiceCluster()==IdCluster){
