@@ -1,4 +1,5 @@
 #include "PesquisaOperacional.h"
+
 ///estrutura para encadear os clusters presentes na solucao
 typedef struct Cluster{ ///estrutura para fragmentar a solucao em clusters com vertices de entrada e saida do cluster
     No*inicio;
@@ -31,6 +32,7 @@ typedef struct Yr{
 
 static Yr* primeiroYr;
 static X * primeiroX;
+static double** matriz;
 
 static int contaX=0;
 static FILE *arqClusters;
@@ -167,73 +169,114 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     X* p= primeiroX;
 
     ///Dimensao
-    fprintf(arq, "%d %d\n", 2*contaX + getNumTotalClusters() + 2, contaX + contaYr + 1);
+    int num_restricoes= 2*contaX + getNumTotalClusters() + 2;
+    int num_variaveis=  contaX + contaYr + 1;
+
+    fprintf(arq, "%d %d\n", num_restricoes,num_variaveis);
+
+    matriz = new double *[num_restricoes];
+    for(int i=0;i<num_restricoes;i++){
+        matriz[i]= new double[num_variaveis];
+    }
+    int i=0,j=0;
 
     ///Funcao objetivo
     fprintf(arq,"0.000 ");
     Yr * pr = primeiroYr;
     while(pr!=NULL){
-          fprintf(arq,"%lf ",p->custo);
-          pr=pr-> proximo;
+        matriz[i][j] = p->custo;
+        j++;
+        fprintf(arq,"%lf ",p->custo);
+        pr=pr-> proximo;
     }
 
     int cAtual=1;
     X * x = primeiroX;
     while(x!=NULL){
+        matriz[i][j] = x->custo;
+        j++;
         fprintf(arq,"%lf ",x->custo);
         x=x->proximo;
 
     }
+    j=0;
+    i++;
     fprintf(arq,"\n\n");
 
 
     int numClusters = getNumTotalClusters();
     ///Primeira restriçao
     while(cAtual<=numClusters){
+        matriz[i][j] = 1;
+        j++;
         fprintf(arq,"1\t");
         pr = primeiroYr;
         while(pr!=NULL){
-              fprintf(arq," 0\t");
-              pr=pr-> proximo;
+            matriz[i][j] = 0;
+            j++;
+            fprintf(arq," 0\t");
+            pr=pr-> proximo;
         }
         p = primeiroX;
         while(p!=NULL){
             if(p->idCluster==cAtual){
+                matriz[i][j] = 1;
+                j++;
                 fprintf(arq,"1 ");
             }else{
+                matriz[i][j] = 0;
+                j++;
                 fprintf(arq,"0 ");
             }
             p=p->proximo;
         }
+        j=0;
+        i++;
         fprintf(arq,"\n");
         cAtual++;
     }
 
     /// Segunda Restricao
     fprintf(arq,"\n");
+    j=0;
+    i++;
+    matriz[i][j] = 1;
+    j++;
     pr = primeiroYr;
     fprintf(arq,"1\t");
     while(pr!=NULL){
-      fprintf(arq," 1\t");
-      pr=pr-> proximo;
+        matriz[i][j] = 1;
+        j++;
+        fprintf(arq," 1\t");
+        pr=pr-> proximo;
     }
     p = primeiroX;
     while(p!=NULL){
+        matriz[i][j] = 0;
+        j++;
         fprintf(arq,"0 ");
         p=p->proximo;
     }
+    j=0;
+    i++;
 
     /// Terceira Restricao
     fprintf(arq,"\n\n");
     x = primeiroX;
     while(x){
+        matriz[i][j] = 0;
+        j++;
         fprintf(arq, "0\t");
         Yr* y = primeiroYr;
         while(y){
             if(buscaEntrada(x, y)){
+                matriz[i][j] = -1;
+                j++;
                 fprintf(arq, "-1\t");
             }
             else{
+                matriz[i][j] = 0;
+                j++;
                 fprintf(arq, " 0\t");
             }
             y = y->proximo;
@@ -241,26 +284,38 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         X* xAux = primeiroX;
         while(xAux){
             if(xAux == x){
+                matriz[i][j] = 1;
+                j++;
                 fprintf(arq, "1 ");
             }
             else{
+                matriz[i][j] = 0;
+                j++;
                 fprintf(arq, "0 ");
             }
             xAux = xAux->proximo;
         }
         fprintf(arq,"\n");
+        j=0;
+        i++;
         x = x->proximo;
     }
     fprintf(arq,"\n\n");
     x = primeiroX;
     while(x){
+        matriz[i][j] = 0;
+        j++;
         fprintf(arq, "0\t");
         Yr* y = primeiroYr;
         while(y){
             if(buscaSaida(x, y)){
+                matriz[i][j] = -1;
+                j++;
                 fprintf(arq, "-1\t");
             }
             else{
+                matriz[i][j] = 0;
+                j++;
                 fprintf(arq, " 0\t");
             }
             y = y->proximo;
@@ -268,17 +323,41 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         X* xAux = primeiroX;
         while(xAux){
             if(xAux == x){
+                matriz[i][j] = 1;
+                j++;
                 fprintf(arq, "1 ");
             }
             else{
+                matriz[i][j] = 0;
+                j++;
                 fprintf(arq, "0 ");
             }
             xAux = xAux->proximo;
         }
+        j=0;
+        i++;
         fprintf(arq,"\n");
         x = x->proximo;
     }
+    /*FILE* arqMat= fopen("dual.txt", "w");
 
+    fprintf(arqMat, "%d %d\n", num_variaveis, num_restricoes);
+
+    for(int j=0; j<num_variaveis; j++){
+        for(int i=0; i<num_restricoes; i++){
+            fprintf(arqMat, "%.0lf ", matriz[i][j]);
+        }
+        fprintf(arqMat, "\n");
+    }
+
+    read_tableau(NULL,"dual.txt");*/
+
+/*
+
+    for(int i=0;i<num_variaveis;i++){
+       delete matriz[i];
+    }
+    delete [] matriz;*/
     fclose(arq);
 }
 static double calculaCustoIntraCluster(Cluster *c){
