@@ -8,9 +8,15 @@ typedef struct Cluster{ ///estrutura para fragmentar a solucao em clusters com v
     Cluster* anterior;///duplamente encadeada para efetuar a troca tanto na solucao como tambem na lista
 }Cluster;///utulizada nas funcoes BuscaLocal2 e BuscaLocal4
 
+typedef struct ClusterLista{
+    Cluster *cluster;
+    ClusterLista *proximo;
+}ClusterLista;
+
 typedef struct X{
     int idX;
     int idCluster;
+    Cluster *cluster;
     int i;
     int j;
     double custo;
@@ -34,6 +40,9 @@ static Yr* primeiroYr;
 static X * primeiroX;
 static double** matriz;
 
+static ClusterLista *primeiroCluster;
+
+
 static int contaX=0;
 static FILE *arqClusters;
 static FILE *arqYr;
@@ -50,26 +59,22 @@ void finalizarArquivosEscrita(){
 }
 
 void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
-    arqClusters = fopen(nomeArquivoClusters, "r");
     arqYr = fopen(nomeArquivoYr, "r");
-    if(!arqClusters){
-        fprintf(stderr,"ERRO: arqivo não encontrado %s\n",nomeArquivoClusters);
-    }
-     if(!arqYr){
+    if(!arqYr){
         fprintf(stderr,"ERRO: arqivo não encontrado %s\n",nomeArquivoYr);
     }
-    if(!arqClusters|!arqYr){
+    if(!arqYr){
         exit(1);
     }
     int leitura=0;
     primeiroX = new X();
     primeiroX->proximo=NULL;
 
-    int idCluster;
+   int idCluster;
     int vEntrada;
     int vSaida;
     double custo;
-    while(leitura!=-1){
+    /*while(leitura!=-1){
         X* aux= new X();
         leitura=fscanf(arqClusters,"%d\t%d\t%d\t%lf\n",&idCluster,&vEntrada,&vSaida,&custo);
         aux->idCluster= idCluster;
@@ -85,7 +90,7 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
     X *pri = primeiroX;
     primeiroX=primeiroX->proximo;
     delete pri;
-    /*X * p =primeiroX;
+    X * p =primeiroX;
     while(p!=NULL){
         fprintf(stdout,"%d\t%d\t%d\t%lf\n",p->idCluster,p->i,p->j,p->custo);
         p=p->proximo;
@@ -141,7 +146,6 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
         perc=perc->proximo;
     }*/
     fclose(arqYr);
-    fclose(arqClusters);
 }
 static bool buscaEntrada(X* xAtual, Yr* yAtual){
     ArestaInterC* arestaAtual = yAtual->primeira;
@@ -238,8 +242,6 @@ void emitirSistemaLinear(char* nomeArquivoSl){
 
     /// Segunda Restricao
     fprintf(arq,"\n");
-    j=0;
-    i++;
     matriz[i][j] = 1;
     j++;
     pr = primeiroYr;
@@ -339,6 +341,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         fprintf(arq,"\n");
         x = x->proximo;
     }
+    for(int k=1;k<getNumTotalTabus();k++);
     /*FILE* arqMat= fopen("dual.txt", "w");
 
     fprintf(arqMat, "%d %d\n", num_variaveis, num_restricoes);
@@ -439,7 +442,26 @@ void salvarSolucaoArquivosPO(No* solucao){
     while(c!=clusterInicial){///salva as areatas inter cluster
         Vertice *vEntrada =  c->inicio->vertice;
         Vertice *vSaida = c->anterior->fim->vertice;
-        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida));
+        if(primeiroX==NULL){
+            primeiroX= new X();
+            primeiroX->i = vEntrada->getIDVertice();
+            primeiroX->j = vSaida->getIDVertice();
+            primeiroX->idCluster = vEntrada->getIndiceCluster();
+            primeiroX->cluster = c;
+            primeiroX->proximo=NULL;
+            primeiroX->custo= calculaCustoIntraCluster(c);
+        }else{
+            X* aux;
+            aux= new X();
+            aux->i = vEntrada->getIDVertice();
+            aux->j = vSaida->getIDVertice();
+            aux->idCluster = vEntrada->getIndiceCluster();
+            aux->cluster = c;
+            aux->proximo=NULL;
+            aux->custo=calculaCustoIntraCluster(c);
+            aux->proximo=primeiroX;
+            primeiroX=aux;
+        }
         c=c->proximo;
     }
 
@@ -450,8 +472,8 @@ void salvarSolucaoArquivosPO(No* solucao){
         fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida));
     }
 
-    c = clusterInicial; ///desaloca a lista encadeada de clusters
-    while(c!=clusterFinal){
+   /* c = clusterInicial; ///desaloca a lista encadeada de clusters
+   while(c!=clusterFinal){
         c=c->proximo;
         delete clusterInicial;
         clusterInicial=NULL;
@@ -459,5 +481,15 @@ void salvarSolucaoArquivosPO(No* solucao){
     }
     delete clusterFinal;
     clusterInicial=NULL;
-    clusterFinal=NULL;
+    clusterFinal=NULL;*/
+    if(primeiroCluster==NULL){
+        primeiroCluster = new ClusterLista();
+        primeiroCluster->proximo=NULL;
+        primeiroCluster->cluster = clusterInicial;
+    }else{
+        ClusterLista *aux =  new ClusterLista();
+        aux->proximo=primeiroCluster;
+        aux->cluster=clusterInicial;
+        primeiroCluster=aux;
+    }
 }

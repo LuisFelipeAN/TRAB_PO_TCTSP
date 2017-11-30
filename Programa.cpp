@@ -290,6 +290,9 @@ void salvarSolucao(No* solucao){
 int getNumTotalClusters(){
     return numTotalClusters;
 }
+int getNumTotalTabus(){
+    return numTotalTabus;
+}
 ///desaloca uma solucao com o ponteiro inicial dado pelo parametro solucao
 void desalocaSolucao(No* solucao){
    No* aux;
