@@ -144,19 +144,34 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     FILE * arq;
     arq = fopen(nomeArquivoSl,"w");
     X* p= primeiroX;
+    ///Funcao objetivo
     fprintf(arq," 0.000 ");
-    while(p!=NULL){
-        fprintf(arq," %lf",-1*p->custo,p->idX);
-        p=p->proximo;
+    Yr * pr = primeiroYr;
+    while(pr!=NULL){
+          fprintf(arq," %lf ",p->custo);
+          pr=pr-> proximo;
+    }
+
+    int cAtual=1;
+    X * x = primeiroX;
+    while(x!=NULL){
+        fprintf(arq," %lf ",x->custo);
+        x=x->proximo;
+
     }
     fprintf(arq,"\n\n\n");
+
+
     int numClusters = getNumTotalClusters();
-    int cAtual=1;
-
-
+    ///Primeira restriçao
     while(cAtual<=numClusters){
-        p= primeiroX;
         fprintf(arq,"1 ");
+        pr = primeiroYr;
+        while(pr!=NULL){
+              fprintf(arq," 0 ");
+              pr=pr-> proximo;
+        }
+        p = primeiroX;
         while(p!=NULL){
             if(p->idCluster==cAtual){
                 fprintf(arq," -1 ");
@@ -168,11 +183,16 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         fprintf(arq,"\n\n");
         cAtual++;
     }
-    Yr * pr = primeiroYr;
+    pr = primeiroYr;
     fprintf(arq," 1 ");
     while(pr!=NULL){
-          fprintf(arq," -1 ");
-          pr=pr-> proximo;
+      fprintf(arq," -1 ");
+      pr=pr-> proximo;
+    }
+    p = primeiroX;
+    while(p!=NULL){
+        fprintf(arq," 0 ");
+        p=p->proximo;
     }
 
     fclose(arq);
