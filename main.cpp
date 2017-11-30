@@ -56,7 +56,7 @@ int main(int argc, char** args)
 
     int minimo=99999999;
     No* melhorSolucao;
-    for(int i=0;i<2;i++){///numero de interacoes
+    for(int i=0;i<1;i++){///numero de interacoes
         No* solucao = NULL;
         while(solucao==NULL){
             solucao = construtivo();///obtem uma solucao inicial
@@ -66,7 +66,7 @@ int main(int argc, char** args)
         int custoAtual = calculaCustoSolucao(solucao);
         int controle=0;
            while(controle<4){
-                 salvarSolucaoArquivosPO(solucao);
+
                 if(controle==0) {
                     buscaLocal(solucao);
                 }
@@ -83,6 +83,7 @@ int main(int argc, char** args)
                 if (custo< custoAtual){
                     custoAtual=custo;
                     controle=0;
+                    salvarSolucaoArquivosPO(solucao);
                 }else{
                    controle++;
                 }
