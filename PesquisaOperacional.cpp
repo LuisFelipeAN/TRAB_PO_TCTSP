@@ -35,7 +35,7 @@ static X * primeiroX;
 static int contaX=0;
 static FILE *arqClusters;
 static FILE *arqYr;
-static int contYr=0;
+static int contaYr=0;
 void inicializaArquivosEscrita(char* nomeArquivoClusters,char * nomeArquivoYr){
     arqClusters = fopen(nomeArquivoClusters, "w");
     arqYr = fopen(nomeArquivoYr, "w");
@@ -121,6 +121,7 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
             primeira=aux;
         }
         yi->primeira=primeira;
+        contaYr++;
     }
 
     Yr * prj = primeiroYr;
@@ -140,22 +141,46 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
     fclose(arqYr);
     fclose(arqClusters);
 }
+static bool buscaEntrada(X* xAtual, Yr* yAtual){
+    ArestaInterC* arestaAtual = yAtual->primeira;
+    while(arestaAtual){
+        if(arestaAtual->vEntrada == xAtual->j){
+            return true;
+        }
+        arestaAtual = arestaAtual->proxima;
+    }
+    return false;
+}
+static bool buscaSaida(X* xAtual, Yr* yAtual){
+    ArestaInterC* arestaAtual = yAtual->primeira;
+    while(arestaAtual){
+        if(arestaAtual->vSaida == xAtual->i){
+            return true;
+        }
+        arestaAtual = arestaAtual->proxima;
+    }
+    return false;
+}
 void emitirSistemaLinear(char* nomeArquivoSl){
     FILE * arq;
     arq = fopen(nomeArquivoSl,"w");
     X* p= primeiroX;
+
+    ///Dimensao
+    fprintf(arq, "%d %d\n", 2*contaX + getNumTotalClusters() + 2, contaX + contaYr + 1);
+
     ///Funcao objetivo
-    fprintf(arq," 0.000 ");
+    fprintf(arq,"0.000 ");
     Yr * pr = primeiroYr;
     while(pr!=NULL){
-          fprintf(arq," %lf ",p->custo);
+          fprintf(arq,"%lf ",p->custo);
           pr=pr-> proximo;
     }
 
     int cAtual=1;
     X * x = primeiroX;
     while(x!=NULL){
-        fprintf(arq," %lf ",x->custo);
+        fprintf(arq,"%lf ",x->custo);
         x=x->proximo;
 
     }
@@ -165,48 +190,96 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     int numClusters = getNumTotalClusters();
     ///Primeira restriçao
     while(cAtual<=numClusters){
-        fprintf(arq,"1 ");
+        fprintf(arq,"1\t");
         pr = primeiroYr;
         while(pr!=NULL){
-              fprintf(arq," 0 ");
+              fprintf(arq," 0\t");
               pr=pr-> proximo;
         }
         p = primeiroX;
         while(p!=NULL){
             if(p->idCluster==cAtual){
-                fprintf(arq," 1 ");
+                fprintf(arq,"1 ");
             }else{
-                fprintf(arq," 0 ");
+                fprintf(arq,"0 ");
             }
             p=p->proximo;
         }
         fprintf(arq,"\n");
         cAtual++;
     }
+
+    /// Segunda Restricao
     fprintf(arq,"\n");
     pr = primeiroYr;
-    fprintf(arq,"1 ");
+    fprintf(arq,"1\t");
     while(pr!=NULL){
-      fprintf(arq," 1 ");
+      fprintf(arq," 1\t");
       pr=pr-> proximo;
     }
     p = primeiroX;
     while(p!=NULL){
-        fprintf(arq," 0 ");
+        fprintf(arq,"0 ");
         p=p->proximo;
     }
 
-    fprintf(arq,"\n")
+    /// Terceira Restricao
+    fprintf(arq,"\n\n");
     x = primeiroX;
-    while(x!=NULL){
-        fprintf(arq," %lf ",x->custo);
-        x=x->proximo;
-
+    while(x){
+        fprintf(arq, "0\t");
+        Yr* y = primeiroYr;
+        while(y){
+            if(buscaEntrada(x, y)){
+                fprintf(arq, "-1\t");
+            }
+            else{
+                fprintf(arq, " 0\t");
+            }
+            y = y->proximo;
+        }
+        X* xAux = primeiroX;
+        while(xAux){
+            if(xAux == x){
+                fprintf(arq, "1 ");
+            }
+            else{
+                fprintf(arq, "0 ");
+            }
+            xAux = xAux->proximo;
+        }
+        fprintf(arq,"\n");
+        x = x->proximo;
     }
-    fclose(arq);
-}
-static X* busca(X* x){
+    fprintf(arq,"\n\n");
+    x = primeiroX;
+    while(x){
+        fprintf(arq, "0\t");
+        Yr* y = primeiroYr;
+        while(y){
+            if(buscaSaida(x, y)){
+                fprintf(arq, "-1\t");
+            }
+            else{
+                fprintf(arq, " 0\t");
+            }
+            y = y->proximo;
+        }
+        X* xAux = primeiroX;
+        while(xAux){
+            if(xAux == x){
+                fprintf(arq, "1 ");
+            }
+            else{
+                fprintf(arq, "0 ");
+            }
+            xAux = xAux->proximo;
+        }
+        fprintf(arq,"\n");
+        x = x->proximo;
+    }
 
+    fclose(arq);
 }
 static double calculaCustoIntraCluster(Cluster *c){
     No* no = c->inicio;
@@ -283,7 +356,7 @@ void salvarSolucaoArquivosPO(No* solucao){
     ///Faz a lista de clusters ficar circular
     clusterFinal->proximo=clusterInicial;
     clusterInicial->anterior=clusterFinal;
-    fprintf(arqYr,"%d\t%d\n",contYr,getNumTotalClusters());///numero de arestas inter cluster
+    fprintf(arqYr,"%d\t%d\n",contaYr,getNumTotalClusters());///numero de arestas inter cluster
     while(c!=clusterInicial){///salva as areatas inter cluster
         Vertice *vEntrada =  c->inicio->vertice;
         Vertice *vSaida = c->anterior->fim->vertice;
@@ -308,5 +381,4 @@ void salvarSolucaoArquivosPO(No* solucao){
     delete clusterFinal;
     clusterInicial=NULL;
     clusterFinal=NULL;
-    contYr++;
 }
