@@ -1,3 +1,7 @@
 *.o
 *.layout
 *.depend
+clusters.txt
+sistema.txt
+TRABALHO_PO.exe
+yr.txt
