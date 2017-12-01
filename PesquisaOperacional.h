@@ -6,4 +6,5 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr);
 void salvarSolucaoArquivosPO(No* solucao);
 void emitirSistemaLinear(char *nomeArquivoSl);
 void finalizarArquivosEscrita();
+void imprimeX();
 #endif // PESQUISAOPERACIONAL_H_INCLUDED

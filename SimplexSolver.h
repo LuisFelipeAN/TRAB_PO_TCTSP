@@ -2,7 +2,7 @@
     Simple Simplex Solver Class
     Copyright (C) 2012  Tamas Bolner
 	For more information, visit: http://blog.bolner.hu/2012/08/22/simplex/
-	
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -18,9 +18,11 @@
 */
 
 #pragma once
-#include <Eigen/Dense>
+#include "Eigen/Dense"
 
 using namespace Eigen;
+
+typedef int64_t __int64;
 
 #define SIMPLEX_MINIMIZE 1
 #define SIMPLEX_MAXIMIZE 2

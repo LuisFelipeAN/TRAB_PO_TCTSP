@@ -1,4 +1,7 @@
 #include "PesquisaOperacional.h"
+#include "SimplexSolver.h"
+#include "Eigen/Dense"
+#include <iostream>
 
 ///estrutura para encadear os clusters presentes na solucao
 typedef struct Cluster{ ///estrutura para fragmentar a solucao em clusters com vertices de entrada e saida do cluster
@@ -36,11 +39,11 @@ typedef struct Yr{
     Yr* proximo;
 }Yr;
 
-static Yr* primeiroYr;
-static X * primeiroX;
+static Yr* primeiroYr=NULL;
+static X * primeiroX=NULL;
 static double** matriz;
 
-static ClusterLista *primeiroCluster;
+static ClusterLista *primeiroCluster = NULL;
 
 
 static int contaX=0;
@@ -57,7 +60,19 @@ void finalizarArquivosEscrita(){
     if(arqYr)
         fclose(arqYr);
 }
+static bool buscaTabu(Cluster *atual,int idTabu){
+    No *p=atual->inicio;
+    if(p->vertice->getIndiceTabu()==idTabu) return true;
+    else{
+         while(p!=atual->fim){
+            if(p->vertice->getIndiceTabu()==idTabu) return true;
+            p=p->proximo;
+         }
+         return false;
+    }
+    return false;
 
+}
 void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
     arqYr = fopen(nomeArquivoYr, "r");
     if(!arqYr){
@@ -67,36 +82,10 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
         exit(1);
     }
     int leitura=0;
-    primeiroX = new X();
-    primeiroX->proximo=NULL;
-
-   int idCluster;
+    int idCluster;
     int vEntrada;
     int vSaida;
     double custo;
-    /*while(leitura!=-1){
-        X* aux= new X();
-        leitura=fscanf(arqClusters,"%d\t%d\t%d\t%lf\n",&idCluster,&vEntrada,&vSaida,&custo);
-        aux->idCluster= idCluster;
-        aux->i=vEntrada;
-        aux->j=vSaida;
-        aux->custo=custo;
-        aux->emUso=0;
-        aux->proximo=primeiroX->proximo;
-        aux->idX=contaX;
-        contaX++;
-        primeiroX->proximo=aux;
-    };
-    X *pri = primeiroX;
-    primeiroX=primeiroX->proximo;
-    delete pri;
-    X * p =primeiroX;
-    while(p!=NULL){
-        fprintf(stdout,"%d\t%d\t%d\t%lf\n",p->idCluster,p->i,p->j,p->custo);
-        p=p->proximo;
-    }*/
-
-
     leitura=0;
     int cont;
     int numArestas;
@@ -173,7 +162,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     X* p= primeiroX;
 
     ///Dimensao
-    int num_restricoes= 2*contaX + getNumTotalClusters() + 2;
+    int num_restricoes= 2*contaX + getNumTotalClusters() + 2+ getNumTotalTabus();
     int num_variaveis=  contaX + contaYr + 1;
 
     fprintf(arq, "%d %d\n", num_restricoes,num_variaveis);
@@ -188,10 +177,10 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     fprintf(arq,"0.000 ");
     Yr * pr = primeiroYr;
     while(pr!=NULL){
-        matriz[i][j] = p->custo;
+        matriz[i][j] = pr->primeira->custo;
         j++;
-        fprintf(arq,"%lf ",p->custo);
-        pr=pr-> proximo;
+        fprintf(arq,"%lf ",pr->primeira->custo);
+        pr= pr->proximo;
     }
 
     int cAtual=1;
@@ -207,13 +196,17 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     i++;
     fprintf(arq,"\n\n");
 
+    VectorXd funcaoObjetivo(num_variaveis);
+    for(int k=0; k<num_variaveis; k++){
+        funcaoObjetivo(k) = matriz[0][k];
+    }
+
+    //std::cout << funcaoObjetivo << std::endl;
+
 
     int numClusters = getNumTotalClusters();
     ///Primeira restriçao
     while(cAtual<=numClusters){
-        matriz[i][j] = 1;
-        j++;
-        fprintf(arq,"1\t");
         pr = primeiroYr;
         while(pr!=NULL){
             matriz[i][j] = 0;
@@ -234,6 +227,9 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             }
             p=p->proximo;
         }
+        matriz[i][j] = 1;
+        j++;
+        fprintf(arq,"1\t");
         j=0;
         i++;
         fprintf(arq,"\n");
@@ -242,10 +238,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
 
     /// Segunda Restricao
     fprintf(arq,"\n");
-    matriz[i][j] = 1;
-    j++;
     pr = primeiroYr;
-    fprintf(arq,"1\t");
     while(pr!=NULL){
         matriz[i][j] = 1;
         j++;
@@ -259,6 +252,9 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         fprintf(arq,"0 ");
         p=p->proximo;
     }
+    matriz[i][j] = 1;
+    j++;
+    fprintf(arq,"1\t");
     j=0;
     i++;
 
@@ -266,9 +262,6 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     fprintf(arq,"\n\n");
     x = primeiroX;
     while(x){
-        matriz[i][j] = 0;
-        j++;
-        fprintf(arq, "0\t");
         Yr* y = primeiroYr;
         while(y){
             if(buscaEntrada(x, y)){
@@ -297,6 +290,9 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             }
             xAux = xAux->proximo;
         }
+        matriz[i][j] = 0;
+        j++;
+        fprintf(arq, "0\t");
         fprintf(arq,"\n");
         j=0;
         i++;
@@ -305,9 +301,6 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     fprintf(arq,"\n\n");
     x = primeiroX;
     while(x){
-        matriz[i][j] = 0;
-        j++;
-        fprintf(arq, "0\t");
         Yr* y = primeiroYr;
         while(y){
             if(buscaSaida(x, y)){
@@ -336,24 +329,65 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             }
             xAux = xAux->proximo;
         }
+        matriz[i][j] = 0;
+        j++;
+        fprintf(arq, "0\t");
         j=0;
         i++;
         fprintf(arq,"\n");
         x = x->proximo;
     }
-    for(int k=1;k<getNumTotalTabus();k++);
-    /*FILE* arqMat= fopen("dual.txt", "w");
 
+    ///quarta restricao
+    fprintf(arq,"\n");
+    for(int idTabu=0;idTabu<getNumTotalTabus();idTabu++){
+        pr = primeiroYr;
+        while(pr!=NULL){
+            fprintf(arq,"0\t");
+            matriz[i][j] = 0;
+            j++;
+            pr=pr-> proximo;
+        }
+        x=primeiroX;
+        while(x){
+            if(buscaTabu(x->cluster,idTabu)){
+                fprintf(arq,"1 ");
+                 matriz[i][j] = 1;
+                j++;
+            }else{
+                fprintf(arq,"0 ");
+                 matriz[i][j] = 0;
+                j++;
+            }
+            x=x->proximo;
+        }
+        fprintf(arq,"1\n");
+         matriz[i][j] = 1;
+        i++;
+        j=0;
+    }
+    MatrixXd restricoes(num_restricoes-1, num_variaveis);
+    for(int i=1; i<num_restricoes; i++){
+        for(int j=0; j<num_variaveis; j++){
+            restricoes(i-1, j) = matriz[i][j];
+        }
+    }
+
+    FILE * arqMat = fopen("matriz.txt","w");
     fprintf(arqMat, "%d %d\n", num_variaveis, num_restricoes);
-
-    for(int j=0; j<num_variaveis; j++){
-        for(int i=0; i<num_restricoes; i++){
+    for(int i=0; i<num_restricoes; i++){
+        for(int j=0; j<num_variaveis; j++){
             fprintf(arqMat, "%.0lf ", matriz[i][j]);
         }
         fprintf(arqMat, "\n");
     }
 
-    read_tableau(NULL,"dual.txt");*/
+    //std::cout << funcaoObjetivo << std::endl;
+    SimplexSolver *simplex = new SimplexSolver(SIMPLEX_MINIMIZE, funcaoObjetivo, restricoes);
+
+    std::cout << simplex->getSolution() << std::endl << "CUSTO: "<<simplex->getOptimum() << std::endl;
+
+
 
 /*
 
@@ -431,37 +465,46 @@ void salvarSolucaoArquivosPO(No* solucao){
         Vertice *vEntrada = c->inicio->vertice;
         Vertice *vSaida = c->fim->vertice;
         fprintf(arqClusters,"%d\t %d\t %d\t %lf\n",vEntrada->getIndiceCluster()+1,vEntrada->getIDVertice(),vSaida->getIDVertice(),calculaCustoIntraCluster(c));
-        c=c->proximo;
-    }
-    c=clusterInicial->proximo;
-
-    ///Faz a lista de clusters ficar circular
-    clusterFinal->proximo=clusterInicial;
-    clusterInicial->anterior=clusterFinal;
-    fprintf(arqYr,"%d\t%d\n",contaYr,getNumTotalClusters());///numero de arestas inter cluster
-    while(c!=clusterInicial){///salva as areatas inter cluster
-        Vertice *vEntrada =  c->inicio->vertice;
-        Vertice *vSaida = c->anterior->fim->vertice;
-        if(primeiroX==NULL){
+         if(primeiroX==NULL){
+            contaX=1;
             primeiroX= new X();
             primeiroX->i = vEntrada->getIDVertice();
             primeiroX->j = vSaida->getIDVertice();
-            primeiroX->idCluster = vEntrada->getIndiceCluster();
+            primeiroX->idCluster = vEntrada->getIndiceCluster()+1;
             primeiroX->cluster = c;
             primeiroX->proximo=NULL;
             primeiroX->custo= calculaCustoIntraCluster(c);
         }else{
             X* aux;
+            contaX++;
             aux= new X();
             aux->i = vEntrada->getIDVertice();
             aux->j = vSaida->getIDVertice();
-            aux->idCluster = vEntrada->getIndiceCluster();
+            aux->idCluster = vEntrada->getIndiceCluster()+1;
             aux->cluster = c;
-            aux->proximo=NULL;
             aux->custo=calculaCustoIntraCluster(c);
             aux->proximo=primeiroX;
             primeiroX=aux;
         }
+        c=c->proximo;
+
+    }
+    fprintf(stdout,"\n");
+    X *x=primeiroX;
+    while(x!=NULL){
+        fprintf(stdout,"x :%d\t %d\t %d\t %lf\n",x->idCluster,x->i,x->j,x->custo);
+        x=x->proximo;
+    }
+
+    c=clusterInicial->proximo;
+    ///Faz a lista de clusters ficar circular
+    clusterFinal->proximo=clusterInicial;
+    clusterInicial->anterior=clusterFinal;
+    fprintf(arqYr,"%d\t%d\n",contaYr,getNumTotalClusters());///numero de arestas inter cluster
+     while(c!=clusterInicial){
+        Vertice *vEntrada =  c->inicio->vertice;
+        Vertice *vSaida = c->anterior->fim->vertice;
+        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida));
         c=c->proximo;
     }
 
@@ -472,16 +515,12 @@ void salvarSolucaoArquivosPO(No* solucao){
         fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida));
     }
 
-   /* c = clusterInicial; ///desaloca a lista encadeada de clusters
+   c = clusterInicial; ///corta a lista circular
    while(c!=clusterFinal){
         c=c->proximo;
-        delete clusterInicial;
-        clusterInicial=NULL;
-        clusterInicial=c;
     }
-    delete clusterFinal;
-    clusterInicial=NULL;
-    clusterFinal=NULL;*/
+    c->proximo = NULL;
+
     if(primeiroCluster==NULL){
         primeiroCluster = new ClusterLista();
         primeiroCluster->proximo=NULL;
@@ -491,5 +530,13 @@ void salvarSolucaoArquivosPO(No* solucao){
         aux->proximo=primeiroCluster;
         aux->cluster=clusterInicial;
         primeiroCluster=aux;
+    }
+}
+void imprimeX(){
+    fprintf(stdout,"ImprimindoX");
+    X *x=primeiroX;
+    while(x!=NULL){
+        fprintf(stdout,"x :%d\t %d\t %d\t %lf\n",x->idCluster,x->i,x->j,x->custo);
+        x=x->proximo;
     }
 }

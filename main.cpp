@@ -106,6 +106,7 @@ int main(int argc, char** args)
     finalizarArquivosEscrita();
     salvarSolucao(melhorSolucao);///salva a melhor de todas as solucoes
     inicializaLeitura("clusters.txt","yr.txt");
+    imprimeX();
     emitirSistemaLinear("sistema.txt");
     ///desaloca a lista de solucoes
     NoSolucao* aux;
