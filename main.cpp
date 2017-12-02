@@ -52,17 +52,15 @@ int main(int argc, char** args)
     ultimaSolucao->proxima = NULL;
     ultimaSolucao->solucao = NULL;
 
-    inicializaArquivosEscrita("clusters.txt","yr.txt");
 
     int minimo=99999999;
     No* melhorSolucao;
-    for(int i=0;i<1;i++){///numero de interacoes
+    for(int i=0;i<5;i++){///numero de interacoes
         No* solucao = NULL;
         while(solucao==NULL){
             solucao = construtivo();///obtem uma solucao inicial
         }
         ///efetua uma busca VND na solucao atual
-        salvarSolucaoArquivosPO(solucao);
         int custoAtual = calculaCustoSolucao(solucao);
         int controle=0;
            while(controle<4){
@@ -83,8 +81,6 @@ int main(int argc, char** args)
                 if (custo< custoAtual){
                     custoAtual=custo;
                     controle=0;
-                    salvarSolucaoArquivosPO(solucao);
-
                 }else{
                    controle++;
                 }
@@ -96,6 +92,7 @@ int main(int argc, char** args)
         nova->proxima=ultimaSolucao;
         nova->solucao=solucao;
         ultimaSolucao=nova;
+        imprimeSolucao(solucao);
 
         ///verifica se a solucao atual e melhor do que a melhor solucao encontrada
         int custo = calculaCustoSolucao(solucao);
@@ -105,11 +102,17 @@ int main(int argc, char** args)
         }
     }
     finalizarArquivosEscrita();
-    salvarSolucao(melhorSolucao);///salva a melhor de todas as solucoes
-    inicializaLeitura("clusters.txt","yr.txt");
-    imprimeX();
-    emitirSistemaLinear("sistema.txt");
+    //salvarSolucao(melhorSolucao);///salva a melhor de todas as solucoes
+
     ///desaloca a lista de solucoes
+    inicializaArquivosEscrita("clusters.txt","yr.txt");
+    NoSolucao * percorre=ultimaSolucao;
+    while(percorre->proxima!=NULL){
+         salvarSolucao(percorre->solucao);
+         salvarSolucaoArquivosPO(percorre->solucao);
+         percorre=percorre->proxima;
+    }
+
     NoSolucao* aux;
     if(ultimaSolucao!=NULL){
         aux=ultimaSolucao->proxima;
@@ -117,11 +120,15 @@ int main(int argc, char** args)
         delete ultimaSolucao;
         while(aux!=NULL){
             ultimaSolucao = aux;
+
             aux = aux->proxima;
             delete ultimaSolucao;
         }
         ultimaSolucao=NULL;
     }
+    inicializaLeitura("clusters.txt","yr.txt");
+    imprimeX();
+    emitirSistemaLinear("sistema.txt");
     ///desaloca os vertice es os clusters
     desalocaMemoria(NULL);
 

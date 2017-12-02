@@ -83,7 +83,7 @@ void imprimeSolucao(No* solucao){
 No* solucao=NULL;
 ///Funcao calcula aondo o novo Vertice sera inserido na lista de solucao
 void calculaInsercao(Vertice *v){
-     fprintf(stdout,"inserindo: %d do tabu: %d\n",v->getIDVertice(),v->getIndiceTabu());
+    // fprintf(stdout,"inserindo: %d do tabu: %d\n",v->getIDVertice(),v->getIndiceTabu());
      No *anterior;
      No *novo = new No();
 
@@ -134,7 +134,7 @@ void calculaInsercao(Vertice *v){
     if(controleInsecaoIntraClusters){
         novo->proximo = anterior->proximo;
         anterior->proximo=novo;
-        fprintf(stdout,"inserindo %d depois do %d\n",v->getIDVertice(),anterior->vertice->getIDVertice());
+        //fprintf(stdout,"inserindo %d depois do %d\n",v->getIDVertice(),anterior->vertice->getIDVertice());
     }else{ /// senao insira o vertice no final da solucao
         noAtual->proximo= novo;
         novo->proximo=solucao;
@@ -184,7 +184,7 @@ No* construtivo(){
         numTabusVisitados++;
         Vertice* v = sorteado->getRamdomCluster(idC);
         calculaInsercao(v);
-        fprintf(stdout,"tabu: %d\n",v->getIndiceTabu());
+        //fprintf(stdout,"tabu: %d\n",v->getIndiceTabu());
 
 
     }
