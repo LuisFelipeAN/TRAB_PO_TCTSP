@@ -54,25 +54,28 @@ void inicializaArquivosEscrita(char* nomeArquivoClusters,char * nomeArquivoYr){
     arqClusters = fopen(nomeArquivoClusters, "w");
     arqYr = fopen(nomeArquivoYr, "w");
 }
+
 void finalizarArquivosEscrita(){
     if(arqClusters)
         fclose(arqClusters);
     if(arqYr)
         fclose(arqYr);
 }
-static bool buscaTabu(Cluster *atual,int idTabu){
+
+static bool buscaTabu(Cluster *atual, int idTabu){
     No *p=atual->inicio;
     if(p->vertice->getIndiceTabu()==idTabu) return true;
     else{
-         while(p!=atual->fim){
+        while(p && p != atual->fim){
             if(p->vertice->getIndiceTabu()==idTabu) return true;
             p=p->proximo;
-         }
-         return false;
+        }
+        return false;
     }
     return false;
 
 }
+
 void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
     arqYr = fopen(nomeArquivoYr, "r");
     if(!arqYr){
@@ -136,6 +139,7 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
     }*/
     fclose(arqYr);
 }
+
 static bool buscaEntrada(X* xAtual, Yr* yAtual){
     ArestaInterC* arestaAtual = yAtual->primeira;
     while(arestaAtual){
@@ -146,6 +150,7 @@ static bool buscaEntrada(X* xAtual, Yr* yAtual){
     }
     return false;
 }
+
 static bool buscaSaida(X* xAtual, Yr* yAtual){
     ArestaInterC* arestaAtual = yAtual->primeira;
     while(arestaAtual){
@@ -156,6 +161,7 @@ static bool buscaSaida(X* xAtual, Yr* yAtual){
     }
     return false;
 }
+
 void emitirSistemaLinear(char* nomeArquivoSl){
     FILE * arq;
     arq = fopen(nomeArquivoSl,"w");
@@ -165,7 +171,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     int num_restricoes= 2*contaX + getNumTotalClusters() + 2+ getNumTotalTabus();
     int num_variaveis=  contaX + contaYr + 1;
 
-    fprintf(arq, "%d %d\n", num_restricoes,num_variaveis);
+    fprintf(arq, "%d %d\n", num_restricoes, num_variaveis);
 
     matriz = new double *[num_restricoes];
     for(int i=0;i<num_restricoes;i++){
@@ -174,21 +180,20 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     int i=0,j=0;
 
     ///Funcao objetivo
-    fprintf(arq,"0.000 ");
     Yr * pr = primeiroYr;
     while(pr!=NULL){
         matriz[i][j] = pr->primeira->custo;
         j++;
-        fprintf(arq,"%lf ",pr->primeira->custo);
+        fprintf(arq,"%.0lf ",pr->primeira->custo);
         pr= pr->proximo;
     }
 
     int cAtual=1;
     X * x = primeiroX;
-    while(x!=NULL){
+    while(x){
         matriz[i][j] = x->custo;
         j++;
-        fprintf(arq,"%lf ",x->custo);
+        fprintf(arq,"%.0lf ",x->custo);
         x=x->proximo;
 
     }
@@ -196,8 +201,8 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     i++;
     fprintf(arq,"\n\n");
 
-    VectorXd funcaoObjetivo(num_variaveis);
-    for(int k=0; k<num_variaveis; k++){
+    VectorXd funcaoObjetivo(num_variaveis-1);
+    for(int k=0; k<num_variaveis-1; k++){
         funcaoObjetivo(k) = matriz[0][k];
     }
 
@@ -205,7 +210,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
 
 
     int numClusters = getNumTotalClusters();
-    ///Primeira restriçao
+    /// Primeira Restriçao
     while(cAtual<=numClusters){
         pr = primeiroYr;
         while(pr!=NULL){
@@ -338,7 +343,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         x = x->proximo;
     }
 
-    ///quarta restricao
+    /// Quarta Restricao
     fprintf(arq,"\n");
     for(int idTabu=0;idTabu<getNumTotalTabus();idTabu++){
         pr = primeiroYr;
@@ -377,15 +382,10 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     fprintf(arqMat, "%d %d\n", num_variaveis, num_restricoes);
     for(int i=0; i<num_restricoes; i++){
         for(int j=0; j<num_variaveis; j++){
-            fprintf(arqMat, "%.0lf ", matriz[i][j]);
+            fprintf(arqMat, "%.0f ", matriz[i][j]);
         }
         fprintf(arqMat, "\n");
     }
-
-    //std::cout << funcaoObjetivo << std::endl;
-    SimplexSolver *simplex = new SimplexSolver(SIMPLEX_MINIMIZE, funcaoObjetivo, restricoes);
-
-    std::cout << simplex->getSolution() << std::endl << "CUSTO: "<<simplex->getOptimum() << std::endl;
 
 
 
@@ -396,7 +396,13 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     }
     delete [] matriz;*/
     fclose(arq);
+
+    //std::cout << funcaoObjetivo << std::endl;
+    SimplexSolver *simplex = new SimplexSolver(SIMPLEX_MINIMIZE, funcaoObjetivo, restricoes);
+
+    std::cout << funcaoObjetivo << std::endl << simplex->getSolution() << std::endl << "CUSTO: "<<simplex->getOptimum() << std::endl;
 }
+
 static double calculaCustoIntraCluster(Cluster *c){
     No* no = c->inicio;
     if(c->inicio!=c->fim){
@@ -532,6 +538,7 @@ void salvarSolucaoArquivosPO(No* solucao){
         primeiroCluster=aux;
     }
 }
+
 void imprimeX(){
     fprintf(stdout,"ImprimindoX");
     X *x=primeiroX;
