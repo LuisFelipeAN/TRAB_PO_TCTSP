@@ -12,7 +12,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="INSTANCIAS/13i-10-lin318-64.txt 0" />
+				<Option parameters="INSTANCIAS/14i-9-st70-14.txt 0" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>

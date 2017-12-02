@@ -308,6 +308,7 @@ void desalocaSolucao(No* solucao){
     }
 
 }
+
 void desalocaMemoria(No* solucao){
     ///Desaloca a lista encadeada de vertices
     ponteiro=primeiro;

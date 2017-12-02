@@ -61,16 +61,25 @@ void finalizarArquivosEscrita(){
         fclose(arqYr);
 }
 static bool buscaTabu(Cluster *atual,int idTabu){
-    No *p=atual->inicio;
-    if(p->vertice->getIndiceTabu()==idTabu) return true;
-    else{
-         while(p!=atual->fim){
-            if(p->vertice->getIndiceTabu()==idTabu) return true;
-            p=p->proximo;
-         }
-         return false;
-    }
-    return false;
+Cluster *c =atual;
+    No *p=c->inicio;
+     /*fprintf(stdout,"buscando: %d\n",idTabu);///imprime para confirmar a busca
+     while(p!=c->fim){
+        fprintf(stdout,"%d ",p->vertice->getIndiceTabu());
+        p=p->proximo;
+     }
+     fprintf(stdout,"%d ",p->vertice->getIndiceTabu());
+     fprintf(stdout,"\n");*/
+
+     p=atual->inicio;
+     while(p!=atual->fim){
+        if(p->vertice->getIndiceTabu()==idTabu){
+            return true;
+        }
+        p=p->proximo;
+     }
+     if(p->vertice->getIndiceTabu()==idTabu) return true;
+     return false;
 
 }
 void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
@@ -397,6 +406,21 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     delete [] matriz;*/
     fclose(arq);
 }
+static void verificaTabus(){
+    for(int i =1;i<=getNumTotalClusters();i++){
+        X* x =primeiroX;
+        while(x){
+            if(x->idCluster==i){
+                No*inicio = x->cluster->inicio;
+                fprintf(stdout,"%d ,",inicio->vertice->getIndiceTabu());
+                while(inicio!= x->cluster->fim){
+                    fprintf(stdout,"%d ,",inicio->vertice->getIndiceTabu());
+                    inicio=inicio->proximo;
+                }
+            }
+        }
+    }
+}
 static double calculaCustoIntraCluster(Cluster *c){
     No* no = c->inicio;
     if(c->inicio!=c->fim){
@@ -409,7 +433,40 @@ static double calculaCustoIntraCluster(Cluster *c){
     }else return 0;
 }
 
-void salvarSolucaoArquivosPO(No* solucao){
+void salvarSolucaoArquivosPO(No* s){
+    ///faz uma copia da solução
+    No *anterior = NULL;
+    No *solucao=NULL;
+    No *copia = s;
+    while(copia->proximo!=NULL){
+        copia->anterior=anterior;
+        anterior=copia;
+        copia = copia->proximo;
+    }
+    copia->anterior=anterior;
+
+    No*proximo=NULL;
+    while(copia){
+        if(solucao==NULL){
+            solucao= new No();
+            solucao->tabu=copia->tabu;
+            solucao->vertice=copia->vertice;
+            solucao->cluster=copia->cluster;
+            solucao->proximo=proximo;
+        }else{
+            No *novo;
+            novo= new No();
+            novo->tabu=copia->tabu;
+            novo->vertice=copia->vertice;
+            novo->cluster=copia->cluster;
+            novo->proximo=proximo;
+            solucao->anterior=novo;
+            solucao=novo;
+            proximo=novo;
+        }
+        copia=copia->anterior;
+    }
+
     Cluster* clusterFinal = NULL;///ultimo cluster da solucao
     int controle=1;
     int idClusterAtual=-1;
@@ -419,7 +476,7 @@ void salvarSolucaoArquivosPO(No* solucao){
         ultimo=ultimo->proximo;
     }
     No* aux = solucao;
-    No* anterior=solucao;
+    anterior=solucao;
 
     ///Cria uma lista de clusters e encadeia pelos anteriores
     while(aux!=NULL){
@@ -490,11 +547,11 @@ void salvarSolucaoArquivosPO(No* solucao){
 
     }
     fprintf(stdout,"\n");
-    X *x=primeiroX;
+   /* X *x=primeiroX;
     while(x!=NULL){
         fprintf(stdout,"x :%d\t %d\t %d\t %lf\n",x->idCluster,x->i,x->j,x->custo);
         x=x->proximo;
-    }
+    }*/
 
     c=clusterInicial->proximo;
     ///Faz a lista de clusters ficar circular
@@ -512,14 +569,28 @@ void salvarSolucaoArquivosPO(No* solucao){
     Vertice *vEntrada =  c->inicio->vertice;
     Vertice *vSaida = c->anterior->fim->vertice;
     if(vEntrada->getIndiceCluster()!=vSaida->getIndiceCluster()){
-        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida));
+        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida)*10*getPenalizacao());
     }
 
    c = clusterInicial; ///corta a lista circular
+   /*salvarSolucao(solucao);///inprime para verificar os tabus
    while(c!=clusterFinal){
-        c=c->proximo;
+        No *p=c->inicio;
+         while(p!=c->fim){
+            fprintf(stdout,"%d ",p->vertice->getIndiceTabu()+1);
+            p=p->proximo;
+         }
+         fprintf(stdout,"%d ",p->vertice->getIndiceTabu()+1);
+         fprintf(stdout,"\n");
+         c=c->proximo;
     }
-    c->proximo = NULL;
+    No *p=clusterFinal->inicio;
+     while(p!=clusterFinal->fim){
+        fprintf(stdout,"%d ",p->vertice->getIndiceTabu()+1);
+        p=p->proximo;
+     }
+     fprintf(stdout,"%d ",p->vertice->getIndiceTabu()+1);
+     fprintf(stdout,"\n");*/
 
     if(primeiroCluster==NULL){
         primeiroCluster = new ClusterLista();
@@ -533,10 +604,10 @@ void salvarSolucaoArquivosPO(No* solucao){
     }
 }
 void imprimeX(){
-    fprintf(stdout,"ImprimindoX");
+    /*fprintf(stdout,"ImprimindoX");
     X *x=primeiroX;
     while(x!=NULL){
         fprintf(stdout,"x :%d\t %d\t %d\t %lf\n",x->idCluster,x->i,x->j,x->custo);
         x=x->proximo;
-    }
+    }*/
 }

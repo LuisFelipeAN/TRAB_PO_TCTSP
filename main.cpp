@@ -84,6 +84,7 @@ int main(int argc, char** args)
                     custoAtual=custo;
                     controle=0;
                     salvarSolucaoArquivosPO(solucao);
+
                 }else{
                    controle++;
                 }
