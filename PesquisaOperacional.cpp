@@ -573,7 +573,7 @@ void salvarSolucaoArquivosPO(No* s){
     }
 
    c = clusterInicial; ///corta a lista circular
-   /*salvarSolucao(solucao);///inprime para verificar os tabus
+   salvarSolucao(solucao);///inprime para verificar os tabus
    while(c!=clusterFinal){
         No *p=c->inicio;
          while(p!=c->fim){
@@ -590,7 +590,7 @@ void salvarSolucaoArquivosPO(No* s){
         p=p->proximo;
      }
      fprintf(stdout,"%d ",p->vertice->getIndiceTabu()+1);
-     fprintf(stdout,"\n");*/
+     fprintf(stdout,"\n");
 
     if(primeiroCluster==NULL){
         primeiroCluster = new ClusterLista();

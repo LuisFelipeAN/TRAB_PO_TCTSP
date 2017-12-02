@@ -83,6 +83,7 @@ void imprimeSolucao(No* solucao){
 No* solucao=NULL;
 ///Funcao calcula aondo o novo Vertice sera inserido na lista de solucao
 void calculaInsercao(Vertice *v){
+     fprintf(stdout,"inserindo: %d do tabu: %d\n",v->getIDVertice(),v->getIndiceTabu());
      No *anterior;
      No *novo = new No();
 
@@ -95,7 +96,9 @@ void calculaInsercao(Vertice *v){
         solucao=novo;
      }else{
 
-
+    if(v->getIDVertice()==35){
+        int k;
+    }
 
      double custoMinimo = 9999999;
      bool controleInsecaoIntraClusters=false;
@@ -131,11 +134,12 @@ void calculaInsercao(Vertice *v){
     if(controleInsecaoIntraClusters){
         novo->proximo = anterior->proximo;
         anterior->proximo=novo;
+        fprintf(stdout,"inserindo %d depois do %d\n",v->getIDVertice(),anterior->vertice->getIDVertice());
     }else{ /// senao insira o vertice no final da solucao
         noAtual->proximo= novo;
         novo->proximo=solucao;
      }
-     }
+    }
 }
 int clusterMenorDiferenca(){
     ClusterInstancia* menor;
@@ -170,6 +174,9 @@ No* construtivo(){
             idC=rand() % numTotalClusters;
             ClusterInstancia *c = &clusters[idC];
             sorteado=c->getTabuRandom();
+            if(sorteado&&sorteado->visitado==true){
+                    sorteado=NULL;
+            }
         }
         clusters[idC].numPresenteSolucao++;
         clusters[idC].visitado=true;
@@ -177,7 +184,7 @@ No* construtivo(){
         numTabusVisitados++;
         Vertice* v = sorteado->getRamdomCluster(idC);
         calculaInsercao(v);
-
+        fprintf(stdout,"tabu: %d\n",v->getIndiceTabu());
 
 
     }
@@ -199,12 +206,22 @@ No* construtivo(){
 
        }
     }
+    /*if(ok){
+        for(int i=0;i<numTotalTabus;i++){
+           if(tabus[i].visitado==false){
+                ok=false;
+                fprintf(stdout,"Nem teodo mudo foi visitado\n");
+                break;
+
+           }
+        }
+    }*/
     if(!ok){
          desalocaSolucao(solucao);
          return NULL;
     }else{
          return solucao;
-    }
+         }
 }
 ClusterInstancia* getCluster(int id){
     return &clusters[id];
