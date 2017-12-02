@@ -22,7 +22,7 @@
 
 using namespace Eigen;
 
-typedef int64_t __int64;
+//typedef int64_t __int64;
 
 #define SIMPLEX_MINIMIZE 1
 #define SIMPLEX_MAXIMIZE 2

@@ -407,7 +407,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     //std::cout << funcaoObjetivo << std::endl;
     SimplexSolver *simplex = new SimplexSolver(SIMPLEX_MINIMIZE, funcaoObjetivo, restricoes);
 
-    std::cout << funcaoObjetivo << std::endl << simplex->getSolution() << std::endl << "CUSTO: "<<simplex->getOptimum() << std::endl;
+    std::cout << funcaoObjetivo.transpose() << std::endl << simplex->getSolution().transpose() << std::endl << "CUSTO: "<<simplex->getOptimum() << std::endl;
 }
 static void verificaTabus(){
     for(int i =1;i<=getNumTotalClusters();i++){

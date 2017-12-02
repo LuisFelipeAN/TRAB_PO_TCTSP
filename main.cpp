@@ -55,7 +55,7 @@ int main(int argc, char** args)
 
     int minimo=99999999;
     No* melhorSolucao;
-    for(int i=0;i<5;i++){///numero de interacoes
+    for(int i=0;i<1;i++){///numero de interacoes
         No* solucao = NULL;
         while(solucao==NULL){
             solucao = construtivo();///obtem uma solucao inicial
@@ -101,7 +101,6 @@ int main(int argc, char** args)
             melhorSolucao=solucao;
         }
     }
-    finalizarArquivosEscrita();
     //salvarSolucao(melhorSolucao);///salva a melhor de todas as solucoes
 
     ///desaloca a lista de solucoes
@@ -112,6 +111,7 @@ int main(int argc, char** args)
          salvarSolucaoArquivosPO(percorre->solucao);
          percorre=percorre->proxima;
     }
+    finalizarArquivosEscrita();
 
     NoSolucao* aux;
     if(ultimaSolucao!=NULL){
