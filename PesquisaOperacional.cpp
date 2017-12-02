@@ -566,7 +566,7 @@ void salvarSolucaoArquivosPO(No* s){
      while(c!=clusterInicial){
         Vertice *vEntrada =  c->inicio->vertice;
         Vertice *vSaida = c->anterior->fim->vertice;
-        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida));
+        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida)*getPenalizacao());
         c=c->proximo;
     }
 
@@ -574,7 +574,7 @@ void salvarSolucaoArquivosPO(No* s){
     Vertice *vEntrada =  c->inicio->vertice;
     Vertice *vSaida = c->anterior->fim->vertice;
     if(vEntrada->getIndiceCluster()!=vSaida->getIndiceCluster()){
-        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida)*10*getPenalizacao());
+        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida)*getPenalizacao());
     }
 
    c = clusterInicial; ///corta a lista circular
