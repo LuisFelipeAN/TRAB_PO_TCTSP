@@ -53,21 +53,11 @@ int calculaCustoSolucao(No* solucao){
                 anterior=aux;
 
         }
-        ///calcula a distancia do penultimo ao ultimo
-        somaCusto+=anterior->vertice->calculaCusto(aux->vertice);
-
-        if(anterior->vertice->getIndiceCluster()!= aux->vertice->getIndiceCluster()){
-            somaCusto+=penalisacao;
-        }
-
         ///calcula a distancia do primeiro ao ultimo
-
-            somaCusto+=solucao->vertice->calculaCusto(aux->vertice);
+        somaCusto+=solucao->vertice->calculaCusto(aux->vertice);
         if(solucao->vertice->getIndiceCluster()!= aux->vertice->getIndiceCluster()){
             somaCusto+=penalisacao;
         }
-
-
     }
 
     return floor(somaCusto);

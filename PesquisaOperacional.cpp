@@ -189,9 +189,15 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     ///Funcao objetivo
     Yr * pr = primeiroYr;
     while(pr!=NULL){
-        matriz[i][j] = pr->primeira->custo;
+        ArestaInterC *a=pr->primeira;
+        double soma=0;
+        while(a){
+            soma+=a->custo;
+            a=a->proxima;
+        }
+        matriz[i][j] = soma;
         j++;
-        fprintf(arq,"%.0lf ",pr->primeira->custo);
+        fprintf(arq,"%.0lf ",soma);
         pr= pr->proximo;
     }
 
@@ -426,12 +432,14 @@ static void verificaTabus(){
 }
 static double calculaCustoIntraCluster(Cluster *c){
     No* no = c->inicio;
+    if(c->inicio->proximo==c->fim) return c->inicio->vertice->calculaCusto(c->fim->vertice);
     if(c->inicio!=c->fim){
         double custo=0;
-        while(no!=c->fim){
+        while(no->proximo!=c->fim){
             custo+= no->vertice->calculaCusto(no->proximo->vertice);
             no=no->proximo;
         }
+        custo+= no->vertice->calculaCusto(c->fim->vertice);
         return custo;
     }else return 0;
 }
@@ -471,7 +479,7 @@ void salvarSolucaoArquivosPO(No* s){
         }
         copia=copia->anterior;
     }
-
+    //salvarSolucao(solucao);
     Cluster* clusterFinal = NULL;///ultimo cluster da solucao
     int controle=1;
     int idClusterAtual=-1;
@@ -523,6 +531,17 @@ void salvarSolucaoArquivosPO(No* s){
     clusterInicial->proximo=auxcc;
 
     Cluster *c = clusterInicial;
+    if(clusterInicial->inicio->vertice->getIndiceCluster()==clusterFinal->inicio->vertice->getIndiceCluster()){
+        clusterFinal->fim->proximo=clusterInicial->inicio;
+        clusterInicial->inicio=clusterFinal->inicio;
+
+        Cluster * cexcluir=clusterFinal;
+        clusterFinal=clusterFinal->anterior;
+        clusterFinal->proximo=NULL;
+        clusterFinal->fim->proximo=NULL;
+        delete cexcluir;
+    }
+
     while(c!=NULL){
         Vertice *vEntrada = c->inicio->vertice;
         Vertice *vSaida = c->fim->vertice;
@@ -552,33 +571,33 @@ void salvarSolucaoArquivosPO(No* s){
 
     }
     fprintf(stdout,"\n");
-   /* X *x=primeiroX;
+    X *x=primeiroX;
     while(x!=NULL){
         fprintf(stdout,"x :%d\t %d\t %d\t %lf\n",x->idCluster,x->i,x->j,x->custo);
         x=x->proximo;
-    }*/
+    }
 
-    c=clusterInicial->proximo;
+    c=clusterInicial;
     ///Faz a lista de clusters ficar circular
     clusterFinal->proximo=clusterInicial;
     clusterInicial->anterior=clusterFinal;
+
     fprintf(arqYr,"%d\t%d\n",contaYr,getNumTotalClusters());///numero de arestas inter cluster
-     while(c!=clusterInicial){
+     while(c!=clusterFinal){
         Vertice *vEntrada =  c->inicio->vertice;
         Vertice *vSaida = c->anterior->fim->vertice;
-        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida)*getPenalizacao());
+        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida)+getPenalizacao());
         c=c->proximo;
     }
 
     ///salva a ultima aresta inter cluster ligando o final ao inicial
     Vertice *vEntrada =  c->inicio->vertice;
     Vertice *vSaida = c->anterior->fim->vertice;
-    if(vEntrada->getIndiceCluster()!=vSaida->getIndiceCluster()){
-        fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida)*getPenalizacao());
-    }
+    fprintf(arqYr,"%d\t %d\t %lf\n",vEntrada->getIDVertice(),vSaida->getIDVertice(),vEntrada->calculaCusto(vSaida)+getPenalizacao());
+
 
    c = clusterInicial; ///corta a lista circular
-   salvarSolucao(solucao);///inprime para verificar os tabus
+   salvarSolucao(clusterInicial->inicio);///inprime para verificar os tabus
    while(c!=clusterFinal){
         No *p=c->inicio;
          while(p!=c->fim){
