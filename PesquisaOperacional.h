@@ -7,4 +7,5 @@ void salvarSolucaoArquivosPO(No* solucao);
 void emitirSistemaLinear(char *nomeArquivoSl);
 void finalizarArquivosEscrita();
 void imprimeX();
+void desalocaClusters();
 #endif // PESQUISAOPERACIONAL_H_INCLUDED

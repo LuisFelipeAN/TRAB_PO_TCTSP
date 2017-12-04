@@ -92,7 +92,6 @@ int main(int argc, char** args)
         nova->proxima=ultimaSolucao;
         nova->solucao=solucao;
         ultimaSolucao=nova;
-        imprimeSolucao(solucao);
 
         ///verifica se a solucao atual e melhor do que a melhor solucao encontrada
         int custo = calculaCustoSolucao(solucao);
@@ -101,13 +100,11 @@ int main(int argc, char** args)
             melhorSolucao=solucao;
         }
     }
-    //salvarSolucao(melhorSolucao);///salva a melhor de todas as solucoes
 
     ///desaloca a lista de solucoes
     inicializaArquivosEscrita("clusters.txt","yr.txt");
     NoSolucao * percorre=ultimaSolucao;
     while(percorre->proxima!=NULL){
-         salvarSolucao(percorre->solucao);
          salvarSolucaoArquivosPO(percorre->solucao);
          percorre=percorre->proxima;
     }
@@ -127,23 +124,13 @@ int main(int argc, char** args)
         ultimaSolucao=NULL;
     }
     inicializaLeitura("clusters.txt","yr.txt");
-    imprimeX();
     emitirSistemaLinear("sistema.txt");
     ///desaloca os vertice es os clusters
     desalocaMemoria(NULL);
-
+    desalocaClusters();
     ///fecha o arquivo de saida
     fclose(arquivoSaida);
 
     return 0;
 }
-/*
-int main(int argc, char *argv[]) {
-    if (argc > 1) { // usage: cmd datafile
-        read_tableau(&tab, argv[1]);
-    }
-    print_tableau(&tab,"Initial");
-    simplex(&tab);
-    return 0;
-}
-*/
+
