@@ -36,6 +36,7 @@ typedef struct ArestaInterC{
 
 typedef struct Yr{
     ArestaInterC *primeira;
+    int id;
     Yr* proximo;
 }Yr;
 
@@ -97,6 +98,7 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
        leitura=fscanf(arqYr,"%d\t%d\n",&cont,&numArestas);
        if(leitura == -1) break;
        Yr * yi = new Yr();
+
         yi->proximo=primeiroYr->proximo;
         primeiroYr->proximo=yi;
         ArestaInterC* primeira = new ArestaInterC();
@@ -116,6 +118,7 @@ void inicializaLeitura(char* nomeArquivoClusters,char * nomeArquivoYr){
         }
         yi->primeira=primeira;
         contaYr++;
+        yi->id=contaYr;
     }
 
     Yr * prj = primeiroYr;
@@ -155,7 +158,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     int num_restricoes= 2*contaX + getNumTotalClusters() + 2+ getNumTotalTabus();
     int num_variaveis=  contaX + contaYr + 1;
 
-    fprintf(arq, "%d %d\n", num_restricoes, num_variaveis);
+    fprintf(arq, "Minimize\n", num_restricoes, num_variaveis);
 
     matriz = new double *[num_restricoes];
     for(int i=0;i<num_restricoes;i++){
@@ -174,7 +177,7 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         }
         matriz[i][j] = soma;
         j++;
-        fprintf(arq,"%.0lf ",soma);
+        fprintf(arq,"+ %.0lf Y%d ",soma,pr->id);
         pr= pr->proximo;
     }
 
@@ -183,13 +186,13 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     while(x){
         matriz[i][j] = x->custo;
         j++;
-        fprintf(arq,"%.0lf ",x->custo);
+        fprintf(arq," + %.0lf X%d ",x->custo,x->idX);
         x=x->proximo;
 
     }
     j=0;
     i++;
-    fprintf(arq,"\n\n");
+    fprintf(arq,"\nSubject To\n");
 
     VectorXd funcaoObjetivo(num_variaveis-1);
     for(int k=0; k<num_variaveis-1; k++){
@@ -199,10 +202,10 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     /// Primeira Restriçao
     while(cAtual<=numClusters){
         pr = primeiroYr;
+        fprintf(arq," R%d: ",i);
         while(pr!=NULL){
             matriz[i][j] = 0;
             j++;
-            fprintf(arq," 0\t");
             pr=pr-> proximo;
         }
         p = primeiroX;
@@ -210,17 +213,16 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             if(p->idCluster==cAtual){
                 matriz[i][j] = 1;
                 j++;
-                fprintf(arq,"1 ");
+                fprintf(arq,"+ X%d ",p->idX);
             }else{
                 matriz[i][j] = 0;
                 j++;
-                fprintf(arq,"0 ");
             }
             p=p->proximo;
         }
         matriz[i][j] = 1;
         j++;
-        fprintf(arq,"1\t");
+        fprintf(arq," = 1");
         j=0;
         i++;
         fprintf(arq,"\n");
@@ -228,42 +230,42 @@ void emitirSistemaLinear(char* nomeArquivoSl){
     }
 
     /// Segunda Restricao
-    fprintf(arq,"\n");
     pr = primeiroYr;
+    fprintf(arq," R%d:",i);
     while(pr!=NULL){
         matriz[i][j] = 1;
         j++;
-        fprintf(arq," 1\t");
+        fprintf(arq,"+ Y%d ",pr->id);
         pr=pr-> proximo;
     }
     p = primeiroX;
     while(p!=NULL){
         matriz[i][j] = 0;
         j++;
-        fprintf(arq,"0 ");
         p=p->proximo;
     }
     matriz[i][j] = 1;
     j++;
-    fprintf(arq,"1\t");
+    fprintf(arq," = 1\n");
     j=0;
     i++;
 
     /// Terceira Restricao
-    fprintf(arq,"\n\n");
+
     x = primeiroX;
     while(x){
+
+        fprintf(arq," R%d: ",i);
         Yr* y = primeiroYr;
         while(y){
             if(buscaEntrada(x, y)){
                 matriz[i][j] = -1;
                 j++;
-                fprintf(arq, "-1\t");
+                fprintf(arq, "- Y%d ",y->id);
             }
             else{
                 matriz[i][j] = 0;
                 j++;
-                fprintf(arq, " 0\t");
             }
             y = y->proximo;
         }
@@ -272,37 +274,36 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             if(xAux == x){
                 matriz[i][j] = 1;
                 j++;
-                fprintf(arq, "1 ");
+                fprintf(arq, "+ X%d ",xAux->idX);
             }
             else{
                 matriz[i][j] = 0;
                 j++;
-                fprintf(arq, "0 ");
             }
             xAux = xAux->proximo;
         }
         matriz[i][j] = 0;
         j++;
-        fprintf(arq, "0\t");
-        fprintf(arq,"\n");
+
         j=0;
         i++;
         x = x->proximo;
+        fprintf(arq," = 0 \n");
     }
-    fprintf(arq,"\n\n");
     x = primeiroX;
     while(x){
+
+        fprintf(arq," R%d: ",i);
         Yr* y = primeiroYr;
         while(y){
             if(buscaSaida(x, y)){
                 matriz[i][j] = -1;
                 j++;
-                fprintf(arq, "-1\t");
+                fprintf(arq, "- Y%d ",y->id);
             }
             else{
                 matriz[i][j] = 0;
                 j++;
-                fprintf(arq, " 0\t");
             }
             y = y->proximo;
         }
@@ -311,30 +312,27 @@ void emitirSistemaLinear(char* nomeArquivoSl){
             if(xAux == x){
                 matriz[i][j] = 1;
                 j++;
-                fprintf(arq, "1 ");
+                 fprintf(arq, "+ X%d ",xAux->idX);
             }
             else{
                 matriz[i][j] = 0;
                 j++;
-                fprintf(arq, "0 ");
             }
             xAux = xAux->proximo;
         }
         matriz[i][j] = 0;
         j++;
-        fprintf(arq, "0\t");
         j=0;
         i++;
-        fprintf(arq,"\n");
+        fprintf(arq," = 0 \n");
         x = x->proximo;
     }
 
     /// Quarta Restricao
-    fprintf(arq,"\n");
     for(int idTabu=0;idTabu<getNumTotalTabus();idTabu++){
         pr = primeiroYr;
+        fprintf(arq," R%d: ",i);
         while(pr!=NULL){
-            fprintf(arq,"0\t");
             matriz[i][j] = 0;
             j++;
             pr=pr-> proximo;
@@ -342,21 +340,33 @@ void emitirSistemaLinear(char* nomeArquivoSl){
         x=primeiroX;
         while(x){
             if(buscaTabu(x->cluster,idTabu)){
-                fprintf(arq,"1 ");
+                fprintf(arq,"+ X%d ",x->idX);
                  matriz[i][j] = 1;
                 j++;
             }else{
-                fprintf(arq,"0 ");
                  matriz[i][j] = 0;
                 j++;
             }
             x=x->proximo;
         }
-        fprintf(arq,"1\n");
+        fprintf(arq," = 1\n");
          matriz[i][j] = 1;
         i++;
         j=0;
+    }    fprintf(arq,"Bounds\nBinary \n");
+    pr = primeiroYr;
+    while(pr!=NULL){
+        fprintf(arq,"Y%d ",pr->id);
+        pr= pr->proximo;
     }
+    x = primeiroX;
+    while(x){
+        fprintf(arq,"X%d ",x->custo,x->idX);
+        x=x->proximo;
+
+    }
+
+    fprintf(arq,"\nEnd\n");
     MatrixXd restricoes(num_restricoes-1, num_variaveis);
     for(int i=1; i<num_restricoes; i++){
         for(int j=0; j<num_variaveis; j++){
@@ -508,6 +518,7 @@ void salvarSolucaoArquivosPO(No* s){
          if(primeiroX==NULL){
             contaX=1;
             primeiroX= new X();
+            primeiroX->idX=contaX;
             primeiroX->i = vEntrada->getIDVertice();
             primeiroX->j = vSaida->getIDVertice();
             primeiroX->idCluster = vEntrada->getIndiceCluster()+1;
@@ -518,6 +529,7 @@ void salvarSolucaoArquivosPO(No* s){
             X* aux;
             contaX++;
             aux= new X();
+            aux->idX=contaX;
             aux->i = vEntrada->getIDVertice();
             aux->j = vSaida->getIDVertice();
             aux->idCluster = vEntrada->getIndiceCluster()+1;

@@ -55,7 +55,7 @@ int main(int argc, char** args)
 
     int minimo=99999999;
     No* melhorSolucao;
-    for(int i=0;i<1;i++){///numero de interacoes
+    for(int i=0;i<4;i++){///numero de interacoes
         No* solucao = NULL;
         while(solucao==NULL){
             solucao = construtivo();///obtem uma solucao inicial
@@ -124,7 +124,7 @@ int main(int argc, char** args)
         ultimaSolucao=NULL;
     }
     inicializaLeitura("clusters.txt","yr.txt");
-    emitirSistemaLinear("sistema.txt");
+    emitirSistemaLinear("sistema.lp");
     ///desaloca os vertice es os clusters
     desalocaMemoria(NULL);
     desalocaClusters();
